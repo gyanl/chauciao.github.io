@@ -380,7 +380,7 @@
     resizeCanvas();
 
     var controls = (function() {
-      var _v = {"line1":"Charu","line2":"Pragya","font":{"family":"Inter","style":"normal","weight":400,"url":null},"textSize":195,"lineSpacing":1.1,"showText":true,"collisionMode":"Fill Inside (Positive Space)","density":68,"gravity":0.15,"bounciness":0.35,"friction":0.99,"accumulation":true,"settleLife":120,"mouseMode":"Repel","mouseRadius":50,"mouseStrength":1.1,"dotSize":6,"trailLength":0,"bgColor":"#000000","theme":"Classic Confetti","colors":["#9a60ff","#ff9060","#ff6063","#6da452"],"__sys_bg":{"mode":"solid","color":"#ffffff","image":null,"fit":"fill"}};
+      var _v = {"line1":"Charu","line2":"Pragya","font":{"family":"Inter","style":"normal","weight":400,"url":null},"textSize":195,"lineSpacing":1.1,"showText":true,"collisionMode":"Fill Inside (Positive Space)","density":45,"gravity":0.15,"bounciness":0.35,"friction":0.99,"accumulation":true,"settleLife":120,"mouseMode":"Repel","mouseRadius":50,"mouseStrength":1.1,"dotSize":6,"trailLength":0,"bgColor":"#000000","theme":"Classic Confetti","colors":["#9a60ff","#ff9060","#ff6063","#6da452"],"__sys_bg":{"mode":"solid","color":"#ffffff","image":null,"fit":"fill"}};
       var _defaults = JSON.parse(JSON.stringify(_v));
       function _hexToRgb(hex) {
         var h = String(hex || '').replace('#', '');
@@ -436,9 +436,27 @@ let textColumns = null; // cache of x-columns that contain text, for fast spawni
 const mouse = { x: -1000, y: -1000, active: false };
 let lastInteractTs = -Infinity; // timestamp of last pointer interaction (for idle throttle)
 
+// Animation lifecycle: a gentle 5s intro, then run until the text fills and
+// everything is at rest, at which point the loop pauses entirely (zero CPU)
+// and only wakes again on interaction.
+let running = false;
+let stillFrames = 0;
+const STARTUP_MS = 5000;
+const motion = { startTs: -1, factor: 1 }; // factor ramps 0->1 over the first 5s
+
+function wake() {
+  if (running) return;
+  // Before load, the initial start is handled by startup() so the animation
+  // doesn't compete with first paint.
+  if (document.readyState !== 'complete') return;
+  running = true;
+  stillFrames = 0;
+  requestAnimationFrame(draw);
+}
+
 // Fewer particles on mobile, where Lighthouse throttles the CPU 4x and each
 // frame must stay under the 50ms long-task threshold.
-const MAX_PARTICLES = (window.innerWidth <= 768) ? 4000 : 12000;
+const MAX_PARTICLES = (window.innerWidth <= 768) ? 3000 : 8000;
 function initParticles() {
   particles = [];
   for (let i = 0; i < MAX_PARTICLES; i++) {
@@ -474,6 +492,7 @@ area.addEventListener('pointermove', (e) => {
   mouse.y = e.clientY - rect.top;
   mouse.active = true;
   lastInteractTs = performance.now();
+  wake();
 });
 
 area.addEventListener('pointerdown', (e) => {
@@ -482,6 +501,7 @@ area.addEventListener('pointerdown', (e) => {
   const my = e.clientY - rect.top;
   
   lastInteractTs = performance.now();
+  wake();
   const radius = controls.get('mouseRadius') * 2;
   const strength = controls.get('mouseStrength') * 40;
 
@@ -591,8 +611,10 @@ class Particle {
     }
     
     this.y = -20 - Math.random() * 500;
-    this.vx = (Math.random() - 0.5) * 2;
-    this.vy = Math.random() * 3 + 2;
+    // Slower overall fall, and even slower during the intro ramp.
+    const vScale = 0.35 + 0.65 * motion.factor;
+    this.vx = (Math.random() - 0.5) * 1.5 * vScale;
+    this.vy = (Math.random() * 2 + 1.2) * vScale;
     const palette = getPalette();
     this.color = palette[Math.floor(Math.random() * palette.length)];
     this.radius = controls.get('dotSize') * (0.8 + Math.random() * 0.4);
@@ -641,11 +663,8 @@ class Particle {
     }
 
     if (this.settled) {
-      this.settleTime += 1/60;
-      const maxLife = controls.get('settleLife') || 120;
-      if (this.settleTime > maxLife) {
-        this.active = false; // Mark for re-spawning
-      }
+      // Settled particles stay put so the filled text can hold still and the
+      // loop can pause. They only move again when disturbed by interaction.
       return;
     }
 
@@ -653,8 +672,9 @@ class Particle {
     const bounce = controls.get('bounciness');
     const mode = controls.get('collisionMode');
     const accumulation = controls.get('accumulation');
-    
-    this.vy += gravity;
+
+    // Ease gravity in during the intro for a slow, floaty first drop.
+    this.vy += gravity * (0.4 + 0.6 * motion.factor);
     
     const friction = controls.get('friction');
     this.vx *= friction;
@@ -749,14 +769,19 @@ class Particle {
 
 let __lastFrameTs = 0;
 function draw(now) {
-  requestAnimationFrame(draw);
   now = now || 0;
+  if (motion.startTs < 0) motion.startTs = now;
+  // Ramp 0 -> 1 over the first STARTUP_MS for a slow, gentle initial drop.
+  motion.factor = Math.min(1, (now - motion.startTs) / STARTUP_MS);
 
   // Throttle to ~30fps when the user hasn't interacted recently. Halves
   // per-frame main-thread work (and Total Blocking Time) during idle and
   // Lighthouse runs; jumps back to full 60fps the moment you interact.
   const idle = (now - lastInteractTs) > 1500;
-  if (idle && (now - __lastFrameTs) < 32) return;
+  if (idle && (now - __lastFrameTs) < 32) {
+    if (running) requestAnimationFrame(draw);
+    return;
+  }
   __lastFrameTs = now;
 
   ctx.save();
@@ -795,8 +820,10 @@ function draw(now) {
   }
 
   // Single pass: spawn up to `density` inactive particles, then update+draw.
-  const density = controls.get('density');
+  // Spawn slowly during the intro so the text builds up gently.
+  const density = Math.max(4, Math.round(controls.get('density') * (0.2 + 0.8 * motion.factor)));
   let spawned = 0;
+  let moving = 0;
   for (let i = 0; i < particles.length; i++) {
     let p = particles[i];
     if (!p.active) {
@@ -806,23 +833,40 @@ function draw(now) {
     }
     p.update();
     p.draw();
+    if (p.active && !p.settled) moving++;
   }
+
+  // Pause the loop once the text has filled and almost nothing is moving, so
+  // an idle, filled page costs zero CPU. Interaction calls wake() to resume,
+  // and spawning stays on so any dots knocked away get refilled before it
+  // settles and pauses again.
+  const recentlyInteracted = (now - lastInteractTs) < 1500;
+  if (moving <= 3 && !recentlyInteracted && motion.factor >= 1) {
+    if (++stillFrames > 30) { running = false; return; }
+  } else {
+    stillFrames = 0;
+  }
+
+  if (running) requestAnimationFrame(draw);
 }
 
-const ro = new ResizeObserver(() => resize());
+const ro = new ResizeObserver(() => { resize(); wake(); });
 ro.observe(area);
 
-controls.onChange('line1', updateCollisionBuffer);
-controls.onChange('line2', updateCollisionBuffer);
-controls.onChange('lineSpacing', updateCollisionBuffer);
-controls.onChange('font', updateCollisionBuffer);
-controls.onChange('textSize', updateCollisionBuffer);
-controls.onChange('collisionMode', updateCollisionBuffer);
+// Re-fill on text change, then wake the loop so the change is animated.
+const refill = () => { updateCollisionBuffer(); wake(); };
+controls.onChange('line1', refill);
+controls.onChange('line2', refill);
+controls.onChange('lineSpacing', refill);
+controls.onChange('font', refill);
+controls.onChange('textSize', refill);
+controls.onChange('collisionMode', refill);
 controls.onChange('theme', () => {
   const palette = getPalette();
   particles.forEach(p => {
     p.color = palette[Math.floor(Math.random() * palette.length)];
   });
+  wake();
 });
 controls.onChange('colors', () => {
   if (controls.get('theme') === 'Custom Palette') {
@@ -831,11 +875,13 @@ controls.onChange('colors', () => {
       p.color = palette[Math.floor(Math.random() * palette.length)];
     });
   }
+  wake();
 });
 
-controls.onAction('refillText', updateCollisionBuffer);
+controls.onAction('refillText', refill);
 controls.onAction('resetParticles', () => {
   particles.forEach(p => p.active = false);
+  wake();
 });
 
 controls.onChange('accumulation', (val) => {
@@ -843,15 +889,21 @@ controls.onChange('accumulation', (val) => {
     particles.forEach(p => p.settled = false);
     if (settledGrid) settledGrid.fill(0);
   }
+  wake();
 });
 
 resize();
 // Defer the animation loop until after load so it doesn't compete with the
 // browser's first paint (FCP/LCP) or inflate Speed Index.
-if (document.readyState === 'complete') {
+function startup() {
+  running = true;
+  stillFrames = 0;
   requestAnimationFrame(draw);
+}
+if (document.readyState === 'complete') {
+  startup();
 } else {
-  window.addEventListener('load', () => requestAnimationFrame(draw));
+  window.addEventListener('load', startup);
 }
 
     }
