@@ -3,8 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>dots</title>
-  
+  <title>Charu Pragya — Interactive Confetti Typography</title>
+  <meta name="description" content="An interactive confetti typography experiment by Charu Pragya: colorful particles cascade and settle into letterforms, and scatter away from your cursor or touch.">
+  <meta name="author" content="Charu Pragya">
+  <meta name="keywords" content="Charu Pragya, interactive art, generative typography, confetti, creative coding, canvas animation">
+  <meta name="theme-color" content="#000000">
+  <link rel="canonical" href="https://chauciao.com/">
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Charu Pragya — Interactive Confetti Typography">
+  <meta property="og:description" content="Colorful particles cascade and settle into letterforms, and scatter away from your cursor or touch.">
+  <meta property="og:url" content="https://chauciao.com/">
+  <meta property="og:image" content="https://chauciao.com/thumbnail.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Charu Pragya — Interactive Confetti Typography">
+  <meta name="twitter:description" content="Colorful particles cascade and settle into letterforms, and scatter away from your cursor or touch.">
+  <meta name="twitter:image" content="https://chauciao.com/thumbnail.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
 
 
@@ -25,15 +45,83 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
+      /* Paint a solid background immediately so FCP/LCP don't wait on JS.
+         Matches the canvas's own black fill, so there's no visual change. */
+      background: #000;
     }
     canvas { display: block; background: transparent; touch-action: none; }
+
+    /* Visible bio text — a real LCP/FCP target over the canvas.
+       pointer-events: none so it never blocks the confetti interaction. */
+    .bio {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      max-width: 340px;
+      margin: 0;
+      padding: 14px 16px;
+      background: #000;
+      color: #fff;
+      font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: right;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @media (max-width: 768px) {
+      .bio {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        max-width: none;
+        text-align: center;
+        letter-spacing: 0.06em;
+      }
+    }
+
+    /* Accessible content for screen readers, search engines and Lighthouse,
+       visually hidden so it never overlaps the canvas interaction. */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
   </style>
 </head>
 <body>
-  <div class="tool-canvas-area">
-    <canvas id="canvas"></canvas>
-  </div>
+  <header class="visually-hidden">
+    <h1>Charu Pragya</h1>
+    <p>
+      An interactive confetti typography experiment. Colorful particles cascade
+      down the screen and settle into the letters of the name &ldquo;Charu
+      Pragya&rdquo;, and scatter away from your cursor or touch.
+    </p>
+  </header>
+
+  <p class="bio">Founder, Public Knowledge Studio. Designer, Researcher, The Owner of Many (Un)necessary Coffee Tools</p>
+
+  <main class="tool-canvas-area">
+    <canvas id="canvas" role="img"
+      aria-label="Interactive confetti animation spelling the name Charu Pragya. Move your cursor or touch the screen to scatter the particles."></canvas>
+    <noscript>
+      <p style="color:#fff;text-align:center;padding:2rem;">
+        This is an interactive confetti animation by Charu Pragya.
+        Please enable JavaScript to view it.
+      </p>
+    </noscript>
+  </main>
 
   <script>
 
