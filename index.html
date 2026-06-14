@@ -53,12 +53,15 @@
       overflow-x: clip;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    /* First fold: the interactive canvas, exactly one viewport tall. */
+    /* First fold: the interactive canvas, exactly one viewport tall.
+       Use svh (a STABLE viewport unit) rather than dvh — dvh changes as the
+       mobile browser toolbar shows/hides on scroll, which would resize the
+       canvas (and reset the confetti) on every scroll. */
     .hero {
       position: relative;
       width: 100%;
       height: 100vh;
-      height: 100dvh;
+      height: 100svh;
     }
     .tool-canvas-area {
       width: 100%;
@@ -1382,7 +1385,17 @@ function draw(now) {
   if (running) requestAnimationFrame(draw);
 }
 
-const ro = new ResizeObserver(() => { resize(); wake(); });
+// Only rebuild the canvas on a real size change. Ignore width-unchanged,
+// small height nudges (mobile browser toolbar show/hide) so scrolling on
+// mobile doesn't reset the confetti every frame.
+let _lastW = area.clientWidth, _lastH = area.clientHeight;
+const ro = new ResizeObserver(() => {
+  const w = area.clientWidth, h = area.clientHeight;
+  if (w === _lastW && Math.abs(h - _lastH) < 120) return;
+  _lastW = w; _lastH = h;
+  resize();
+  wake();
+});
 ro.observe(area);
 
 // Re-fill on text change, then wake the loop so the change is animated.
