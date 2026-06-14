@@ -552,7 +552,7 @@
           <div class="panel__bar">
             <h2 class="panel__title">Education</h2>
             <div class="panel__filters">
-              <button type="button" class="filter-chip is-active" data-filter="featured">Featured</button>
+              <button type="button" class="filter-chip is-active" data-filter="all">All</button>
               <button type="button" class="filter-chip" data-filter="degree">Degrees</button>
               <button type="button" class="filter-chip" data-filter="course">Courses</button>
             </div>
@@ -612,10 +612,13 @@
     (function() {
       var bars = Array.prototype.slice.call(document.querySelectorAll('.panel__bar'));
       function stackLayout() {
+        // Overlap each bar ~1px over the previous one so no sub-pixel seam
+        // lets the scrolling content show between stacked bars. Fractional
+        // heights (getBoundingClientRect) avoid rounding drift.
         var acc = 0;
-        bars.forEach(function(bar) {
-          bar.style.top = acc + 'px';
-          acc += bar.offsetHeight;
+        bars.forEach(function(bar, i) {
+          bar.style.top = (i === 0 ? 0 : Math.round(acc) - 1) + 'px';
+          acc += bar.getBoundingClientRect().height;
         });
       }
       window.addEventListener('load', stackLayout);
@@ -630,7 +633,7 @@
         function apply(cat) {
           table.querySelectorAll('tbody tr').forEach(function(tr) {
             var cats = (tr.getAttribute('data-cat') || '').split(/\s+/);
-            tr.style.display = cats.indexOf(cat) !== -1 ? '' : 'none';
+            tr.style.display = (cat === 'all' || cats.indexOf(cat) !== -1) ? '' : 'none';
           });
         }
         group.addEventListener('click', function(e) {
