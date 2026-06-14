@@ -430,11 +430,15 @@ const collisionCtx = collisionCanvas.getContext('2d');
 let width = window.innerWidth, height = window.innerHeight, dpr = window.devicePixelRatio || 1;
 let particles = [];
 let collisionData = null;
-let settledGrid = null; 
+let settledGrid = null;
+let textColumns = null; // cache of x-columns that contain text, for fast spawning
 
 const mouse = { x: -1000, y: -1000, active: false };
+let lastInteractTs = -Infinity; // timestamp of last pointer interaction (for idle throttle)
 
-const MAX_PARTICLES = 30000;
+// Fewer particles on mobile, where Lighthouse throttles the CPU 4x and each
+// frame must stay under the 50ms long-task threshold.
+const MAX_PARTICLES = (window.innerWidth <= 768) ? 4000 : 12000;
 function initParticles() {
   particles = [];
   for (let i = 0; i < MAX_PARTICLES; i++) {
@@ -469,6 +473,7 @@ area.addEventListener('pointermove', (e) => {
   mouse.x = e.clientX - rect.left;
   mouse.y = e.clientY - rect.top;
   mouse.active = true;
+  lastInteractTs = performance.now();
 });
 
 area.addEventListener('pointerdown', (e) => {
@@ -476,6 +481,7 @@ area.addEventListener('pointerdown', (e) => {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
   
+  lastInteractTs = performance.now();
   const radius = controls.get('mouseRadius') * 2;
   const strength = controls.get('mouseStrength') * 40;
 
@@ -543,7 +549,16 @@ function updateCollisionBuffer() {
   const imgData = collisionCtx.getImageData(0, 0, width, height);
   collisionData = new Uint32Array(imgData.data.buffer);
   if (settledGrid) settledGrid.fill(0);
-  
+
+  // Cache which x-columns contain text once, so spawning a particle is O(1)
+  // instead of up to 100 random column scans per particle every frame.
+  textColumns = [];
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y += 10) {
+      if (collisionData[y * width + x] !== 0) { textColumns.push(x); break; }
+    }
+  }
+
   // Reset all particles to re-target new text immediately
   particles.forEach(p => p.reset());
 }
@@ -569,25 +584,8 @@ class Particle {
 
   reset() {
     const mode = controls.get('collisionMode');
-    if (mode === 'Fill Inside (Positive Space)' && collisionData) {
-      let attempts = 0;
-      let foundX = Math.random() * width;
-      while (attempts < 100) {
-        let x = Math.floor(Math.random() * width);
-        let hasText = false;
-        for (let y = 0; y < height; y += 10) {
-          if (collisionData[y * width + x] !== 0) {
-            hasText = true;
-            break;
-          }
-        }
-        if (hasText) {
-          foundX = x;
-          break;
-        }
-        attempts++;
-      }
-      this.x = foundX;
+    if (mode === 'Fill Inside (Positive Space)' && textColumns && textColumns.length) {
+      this.x = textColumns[(Math.random() * textColumns.length) | 0];
     } else {
       this.x = Math.random() * width;
     }
@@ -749,7 +747,18 @@ class Particle {
   }
 }
 
-function draw() {
+let __lastFrameTs = 0;
+function draw(now) {
+  requestAnimationFrame(draw);
+  now = now || 0;
+
+  // Throttle to ~30fps when the user hasn't interacted recently. Halves
+  // per-frame main-thread work (and Total Blocking Time) during idle and
+  // Lighthouse runs; jumps back to full 60fps the moment you interact.
+  const idle = (now - lastInteractTs) > 1500;
+  if (idle && (now - __lastFrameTs) < 32) return;
+  __lastFrameTs = now;
+
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   const trail = controls.get('trailLength');
@@ -785,24 +794,19 @@ function draw() {
     }
   }
 
+  // Single pass: spawn up to `density` inactive particles, then update+draw.
   const density = controls.get('density');
   let spawned = 0;
   for (let i = 0; i < particles.length; i++) {
     let p = particles[i];
     if (!p.active) {
-      p.reset(); 
+      if (spawned >= density) continue;
+      p.reset();
       spawned++;
-      if (spawned >= density) break;
     }
-  }
-
-  for (let i = 0; i < particles.length; i++) {
-    let p = particles[i];
     p.update();
     p.draw();
   }
-
-  requestAnimationFrame(draw);
 }
 
 const ro = new ResizeObserver(() => resize());
@@ -842,7 +846,13 @@ controls.onChange('accumulation', (val) => {
 });
 
 resize();
-requestAnimationFrame(draw);
+// Defer the animation loop until after load so it doesn't compete with the
+// browser's first paint (FCP/LCP) or inflate Speed Index.
+if (document.readyState === 'complete') {
+  requestAnimationFrame(draw);
+} else {
+  window.addEventListener('load', () => requestAnimationFrame(draw));
+}
 
     }
 
