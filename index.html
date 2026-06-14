@@ -26,7 +26,7 @@
       position: relative;
       overflow: hidden;
     }
-    canvas { display: block; background: transparent; }
+    canvas { display: block; background: transparent; touch-action: none; }
 
   </style>
 </head>
@@ -421,9 +421,22 @@ function updateCollisionBuffer() {
   const line2 = controls.get('line2') || '';
   const lines = [line1, line2].filter(l => l.trim() !== '');
   const font = controls.get('font') || { style: 'normal', weight: '900', family: 'Inter' };
-  const fontSize = controls.get('textSize') || 150;
-  
-  collisionCtx.font = `${font.style || 'normal'} ${font.weight || '900'} ${fontSize}px ${font.family || 'Inter'}`;
+  let fontSize = controls.get('textSize') || 150;
+
+  // Responsive: scale the font down so the longest line fits the canvas width.
+  // Keeps "Charu / Pragya" fully visible on narrow (mobile) screens.
+  const fontStr = (px) => `${font.style || 'normal'} ${font.weight || '900'} ${px}px ${font.family || 'Inter'}`;
+  collisionCtx.font = fontStr(fontSize);
+  const maxLineWidth = Math.max(
+    line1 ? collisionCtx.measureText(line1).width : 0,
+    line2 ? collisionCtx.measureText(line2).width : 0
+  );
+  const targetWidth = width * 0.9;
+  if (maxLineWidth > targetWidth && maxLineWidth > 0) {
+    fontSize = Math.max(24, fontSize * (targetWidth / maxLineWidth));
+  }
+
+  collisionCtx.font = fontStr(fontSize);
   collisionCtx.fillStyle = 'white';
   collisionCtx.textAlign = 'center';
   collisionCtx.textBaseline = 'middle';
