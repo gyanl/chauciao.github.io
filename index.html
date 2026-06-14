@@ -664,7 +664,7 @@
       var _isMobile = window.innerWidth <= 768;
       if (_isMobile) {
         var _nativeDPR = window.devicePixelRatio || 1;
-        var _cappedDPR = Math.min(1.5, _nativeDPR);
+        var _cappedDPR = Math.min(2, _nativeDPR);
         Object.defineProperty(window, 'devicePixelRatio', { get: function() { return _cappedDPR; } });
       }
     })();
@@ -914,7 +914,7 @@
     resizeCanvas();
 
     var controls = (function() {
-      var _v = {"line1":"Charu","line2":"Pragya","font":{"family":"Inter","style":"normal","weight":400,"url":null},"textSize":195,"lineSpacing":1.1,"showText":true,"collisionMode":"Fill Inside (Positive Space)","density":45,"gravity":0.15,"bounciness":0.35,"friction":0.99,"accumulation":true,"settleLife":120,"mouseMode":"Repel","mouseRadius":50,"mouseStrength":1.1,"dotSize":6,"trailLength":0,"bgColor":"#000000","theme":"Classic Confetti","colors":["#9a60ff","#ff9060","#ff6063","#6da452"],"__sys_bg":{"mode":"solid","color":"#ffffff","image":null,"fit":"fill"}};
+      var _v = {"line1":"Charu","line2":"Pragya","font":{"family":"Georgia, 'Times New Roman', serif","style":"normal","weight":400,"url":null},"textSize":195,"lineSpacing":1.1,"showText":true,"collisionMode":"Fill Inside (Positive Space)","density":45,"gravity":0.15,"bounciness":0.35,"friction":0.99,"accumulation":true,"settleLife":120,"mouseMode":"Repel","mouseRadius":50,"mouseStrength":1.1,"dotSize":6,"trailLength":0,"bgColor":"#000000","theme":"Classic Confetti","colors":["#9a60ff","#ff9060","#ff6063","#6da452"],"__sys_bg":{"mode":"solid","color":"#ffffff","image":null,"fit":"fill"}};
       var _defaults = JSON.parse(JSON.stringify(_v));
       function _hexToRgb(hex) {
         var h = String(hex || '').replace('#', '');
@@ -966,6 +966,7 @@ let particles = [];
 let collisionData = null;
 let settledGrid = null;
 let textColumns = null; // cache of x-columns that contain text, for fast spawning
+let textLayout = null; // cached text font/positions, for crisp rendering on the main canvas
 
 const mouse = { x: -1000, y: -1000, active: false };
 let lastInteractTs = -Infinity; // timestamp of last pointer interaction (for idle throttle)
@@ -1079,7 +1080,8 @@ function updateCollisionBuffer() {
     line1 ? collisionCtx.measureText(line1).width : 0,
     line2 ? collisionCtx.measureText(line2).width : 0
   );
-  const targetWidth = width * 0.9;
+  // Smaller share of the width on mobile so the text isn't oversized.
+  const targetWidth = width * (width <= 768 ? 0.82 : 0.9);
   if (maxLineWidth > targetWidth && maxLineWidth > 0) {
     fontSize = Math.max(24, fontSize * (targetWidth / maxLineWidth));
   }
@@ -1091,14 +1093,17 @@ function updateCollisionBuffer() {
 
   const lineHeight = fontSize * controls.get('lineSpacing');
   const centerY = height / 2;
+  const startY = centerY - ((lines.length - 1) * lineHeight) / 2;
 
   if (lines.length > 0) {
-    const totalHeight = (lines.length - 1) * lineHeight;
-    const startY = centerY - totalHeight / 2;
     lines.forEach((line, i) => {
       collisionCtx.fillText(line, width / 2, startY + i * lineHeight);
     });
   }
+
+  // Cache the layout so draw() can render the visible text crisply on the
+  // DPR-scaled main canvas (drawing the 1x collision canvas would blur it).
+  textLayout = { font: fontStr(fontSize), lines: lines.slice(), startY: startY, lineHeight: lineHeight };
   
   const imgData = collisionCtx.getImageData(0, 0, width, height);
   collisionData = new Uint32Array(imgData.data.buffer);
@@ -1332,8 +1337,17 @@ function draw(now) {
   }
   ctx.restore();
 
-  if (controls.get('showText')) {
-    ctx.drawImage(collisionCanvas, 0, 0);
+  if (controls.get('showText') && textLayout && textLayout.lines.length) {
+    // Draw text directly on the DPR-scaled canvas so it stays crisp (rather
+    // than upscaling the 1x collision canvas). collisionCanvas is still the
+    // source of truth for particle collisions.
+    ctx.fillStyle = '#ffffff';
+    ctx.font = textLayout.font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < textLayout.lines.length; i++) {
+      ctx.fillText(textLayout.lines[i], width / 2, textLayout.startY + i * textLayout.lineHeight);
+    }
   }
 
   if (settledGrid) settledGrid.fill(0);
