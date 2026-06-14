@@ -27,15 +27,38 @@
 
   <style>
 
+    @font-face {
+      font-family: "BDO Grotesk";
+      src: url("BDOGrotesk-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "BDO Grotesk";
+      src: url("BDOGrotesk-DemiBold.woff2") format("woff2");
+      font-weight: 600 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
 
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 100%;
-      height: 100%;
-      background: transparent;
-      overflow: hidden;
+      background: #000;
+      /* clip (not hidden) prevents horizontal scroll without creating a
+         scroll container, which would break the sticky slide stacking. */
+      overflow-x: clip;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    /* First fold: the interactive canvas, exactly one viewport tall. */
+    .hero {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
     }
     .tool-canvas-area {
       width: 100%;
@@ -49,12 +72,14 @@
          Matches the canvas's own black fill, so there's no visual change. */
       background: #000;
     }
-    canvas { display: block; background: transparent; touch-action: none; }
+    /* pan-y lets a vertical swipe scroll to the next fold on touch devices,
+       while taps still drive the confetti interaction. */
+    canvas { display: block; background: transparent; touch-action: pan-y; }
 
     /* Visible bio text — a real LCP/FCP target over the canvas.
        pointer-events: none so it never blocks the confetti interaction. */
     .bio {
-      position: fixed;
+      position: absolute;
       top: 24px;
       right: 24px;
       max-width: 340px;
@@ -84,6 +109,141 @@
       }
     }
 
+    /* Second fold: colour panels that stack like slides as you scroll.
+       Panels are NESTED so each one's sticky bar keeps peeking above the
+       next. Only the title+filter bar is sticky; the table body flows in
+       normal document scroll, so long tables are never cropped.
+       The bar `top` offsets are measured and set by JS (see stackLayout)
+       so they stack correctly at any bar height / screen size. */
+    .panel { position: relative; color: #fff; }
+    .panel--projects   { background: #3d7a43; }
+    .panel--experience { background: #3f5dcb; }
+    .panel--education  { background: #be463e; min-height: 100vh; }
+
+    .panel__bar {
+      position: sticky;
+      top: 0; /* overridden per panel by JS */
+      background-color: inherit;
+      padding: 18px 48px;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+    }
+    .panel--projects   > .panel__bar { z-index: 30; }
+    .panel--experience > .panel__bar { z-index: 20; }
+    .panel--education  > .panel__bar { z-index: 10; }
+    .panel__title {
+      margin: 0;
+      font-family: "BDO Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .panel__filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    /* Plain all-caps text filters: dim by default, bright on hover, and a
+       solid off-white highlight when selected (reads on any panel colour). */
+    .filter-chip {
+      font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      background: none;
+      border: 0;
+      border-radius: 0;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: color 0.12s ease, background-color 0.12s ease;
+    }
+    .filter-chip:hover { color: #fff; }
+    .filter-chip.is-active {
+      color: #1a1a1a;
+      background: #f0ede4;
+    }
+    .panel__body {
+      padding-top: 20px;
+      padding-bottom: 64px;
+      min-height: 40vh;
+    }
+    .panel__empty {
+      padding: 8px 48px;
+      font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .proj-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: "BDO Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .proj-table th,
+    .proj-table td {
+      text-align: left;
+      padding: 22px 24px;
+      vertical-align: middle;
+    }
+    .proj-table th:first-child,
+    .proj-table td:first-child { padding-left: 48px; }
+    .proj-table th:last-child,
+    .proj-table td:last-child { padding-right: 48px; }
+    /* Year column is always the last one: keep it narrow. */
+    .proj-table th:last-child,
+    .proj-table td:last-child { width: 150px; white-space: nowrap; }
+    /* Projects table has no year; let its last column (Discipline) breathe. */
+    .proj-table--wide th:last-child,
+    .proj-table--wide td:last-child { width: auto; white-space: normal; }
+    .proj-table thead th {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      padding-bottom: 28px;
+      color: rgba(255, 255, 255, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+    }
+    .proj-table tbody td {
+      font-size: 17px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.82);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+    .proj-table tbody td:first-child {
+      font-size: 21px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .proj-table tbody tr { transition: background-color 0.12s ease; }
+    .proj-table tbody tr:hover td { background: rgba(255, 255, 255, 0.13); }
+
+    @media (max-width: 768px) {
+      .panel__bar { padding: 14px 20px; }
+      .panel__title { font-size: 19px; }
+      .panel__empty { padding: 8px 20px; }
+      /* Stack each row into a block on narrow screens. */
+      .proj-table thead { display: none; }
+      .proj-table, .proj-table tbody, .proj-table tr, .proj-table td { display: block; width: 100%; }
+      .proj-table tbody tr {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+      }
+      .proj-table tbody td {
+        padding: 2px 0;
+        border: none;
+      }
+      .proj-table th:first-child,
+      .proj-table td:first-child { padding-left: 0; }
+      .proj-table th:last-child,
+      .proj-table td:last-child { width: auto; white-space: normal; padding-right: 0; }
+      .proj-table tbody td:first-child { font-size: 19px; margin-bottom: 4px; }
+      .proj-table tbody tr:hover td { background: transparent; }
+      .proj-table tbody tr:hover { background: rgba(255, 255, 255, 0.13); }
+    }
+
     /* Accessible content for screen readers, search engines and Lighthouse,
        visually hidden so it never overlaps the canvas interaction. */
     .visually-hidden {
@@ -110,18 +270,344 @@
     </p>
   </header>
 
-  <p class="bio">Founder, Public Knowledge Studio. Designer, Researcher, The Owner of Many (Un)necessary Coffee Tools</p>
+  <main>
+    <section class="hero">
+      <p class="bio">Founder, Public Knowledge Studio. Designer, Researcher, The Owner of Many (Un)necessary Coffee Tools</p>
 
-  <main class="tool-canvas-area">
-    <canvas id="canvas" role="img"
-      aria-label="Interactive confetti animation spelling the name Charu Pragya. Move your cursor or touch the screen to scatter the particles."></canvas>
-    <noscript>
-      <p style="color:#fff;text-align:center;padding:2rem;">
-        This is an interactive confetti animation by Charu Pragya.
-        Please enable JavaScript to view it.
-      </p>
-    </noscript>
+      <div class="tool-canvas-area">
+        <canvas id="canvas" role="img"
+          aria-label="Interactive confetti animation spelling the name Charu Pragya. Move your cursor or touch the screen to scatter the particles."></canvas>
+        <noscript>
+          <p style="color:#fff;text-align:center;padding:2rem;">
+            This is an interactive confetti animation by Charu Pragya.
+            Please enable JavaScript to view it.
+          </p>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- Panels are nested (projects > experience > education) so each sticky
+         bar keeps peeking above the next as you scroll. -->
+    <section class="panel panel--projects" aria-label="Projects">
+      <div class="panel__bar">
+        <h2 class="panel__title">Projects</h2>
+        <div class="panel__filters">
+          <button type="button" class="filter-chip is-active" data-filter="featured">Featured</button>
+          <button type="button" class="filter-chip" data-filter="branding">Branding</button>
+          <button type="button" class="filter-chip" data-filter="website">Website</button>
+          <button type="button" class="filter-chip" data-filter="uiux">UI/UX</button>
+          <button type="button" class="filter-chip" data-filter="strategy">Strategy</button>
+          <button type="button" class="filter-chip" data-filter="video">Video</button>
+        </div>
+      </div>
+      <div class="panel__body">
+        <table class="proj-table proj-table--wide">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Description</th>
+              <th>Discipline</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-cat="strategy uiux featured">
+              <td>Net Gala</td>
+              <td>Sports community and venue booking platform</td>
+              <td>Strategy, UI/UX</td>
+            </tr>
+            <tr data-cat="website">
+              <td>Dancing with Mountains</td>
+              <td>Digital space translating radical philosophies</td>
+              <td>Website</td>
+            </tr>
+            <tr data-cat="uiux">
+              <td>Listen</td>
+              <td>Emotional-AI products for iOS and web</td>
+              <td>UI/UX</td>
+            </tr>
+            <tr data-cat="website">
+              <td>Advanced Hydrocarbon Fuels</td>
+              <td>Communication design for plastic-to-fuel process</td>
+              <td>Website</td>
+            </tr>
+            <tr data-cat="branding website">
+              <td>Amie</td>
+              <td>Rotating wardrobe platform identity and web</td>
+              <td>Branding, Website</td>
+            </tr>
+            <tr data-cat="branding website featured">
+              <td>Autotelic Inc</td>
+              <td>AI agent brand and identity design</td>
+              <td>Branding, Website</td>
+            </tr>
+            <tr data-cat="uiux strategy branding">
+              <td>Bobo Cakery</td>
+              <td>Customized artisanal cakes e-commerce site</td>
+              <td>UI/UX, Strategy, Branding</td>
+            </tr>
+            <tr data-cat="uiux strategy">
+              <td>EBC Reader</td>
+              <td>E-library brand and experience redesign</td>
+              <td>UI/UX, Strategy</td>
+            </tr>
+            <tr data-cat="website">
+              <td>Fleetcraft</td>
+              <td>Aviation accessibility vision website</td>
+              <td>Website</td>
+            </tr>
+            <tr data-cat="uiux website strategy featured">
+              <td>Literary Map by Hammock Mag</td>
+              <td>Interactive literary geography visualization</td>
+              <td>UI/UX, Website, Strategy</td>
+            </tr>
+            <tr data-cat="branding website featured">
+              <td>Memory Store</td>
+              <td>AI context storage and recall system (YC P26)</td>
+              <td>Branding, Website</td>
+            </tr>
+            <tr data-cat="branding uiux featured">
+              <td>S&#257; Biennale</td>
+              <td>Asia&rsquo;s land art festival branding</td>
+              <td>Branding, UI/UX</td>
+            </tr>
+            <tr data-cat="uiux strategy branding">
+              <td>Cakeshop</td>
+              <td>Zomato dessert platform redesign</td>
+              <td>UI/UX, Strategy, Branding</td>
+            </tr>
+            <tr data-cat="website">
+              <td>Borkowski</td>
+              <td>London PR agency rebrand</td>
+              <td>Website</td>
+            </tr>
+            <tr data-cat="branding uiux">
+              <td>Gameramp</td>
+              <td>Interactive software control layer</td>
+              <td>Branding, UI/UX</td>
+            </tr>
+            <tr data-cat="branding featured">
+              <td>ressl.ai</td>
+              <td>Intelligent agents automation branding (YC W26)</td>
+              <td>Branding</td>
+            </tr>
+            <tr data-cat="website">
+              <td>Anant Foundation for the Arts</td>
+              <td>South Asian art foundation website</td>
+              <td>Website</td>
+            </tr>
+            <tr data-cat="branding website video featured">
+              <td>Presentations.ai</td>
+              <td>AI-powered presentation generator</td>
+              <td>Branding, Website, Video</td>
+            </tr>
+            <tr data-cat="branding website featured">
+              <td>Sycamore</td>
+              <td>Autonomous AI agent orchestration platform</td>
+              <td>Branding, Website</td>
+            </tr>
+            <tr data-cat="website">
+              <td>Neurosonic</td>
+              <td>Stroke prevention medical device site</td>
+              <td>Website</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <section class="panel panel--experience" aria-label="Experience">
+        <div class="panel__bar">
+          <h2 class="panel__title">Experience</h2>
+          <div class="panel__filters">
+            <button type="button" class="filter-chip is-active" data-filter="featured">Featured</button>
+            <button type="button" class="filter-chip" data-filter="research">Research</button>
+            <button type="button" class="filter-chip" data-filter="editorial">Editorial</button>
+            <button type="button" class="filter-chip" data-filter="strategy">Strategy</button>
+            <button type="button" class="filter-chip" data-filter="teaching">Teaching</button>
+          </div>
+        </div>
+        <div class="panel__body">
+          <table class="proj-table">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Organization</th>
+                <th>Location</th>
+                <th>Years</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-cat="strategy featured">
+                <td>Founder</td>
+                <td>Public Knowledge Studio</td>
+                <td>Delhi, India</td>
+                <td>2024&ndash;Present</td>
+              </tr>
+              <tr data-cat="strategy featured">
+                <td>Member</td>
+                <td>South Park Commons</td>
+                <td>Bengaluru, India</td>
+                <td>2025&ndash;2026</td>
+              </tr>
+              <tr data-cat="research featured">
+                <td>Head of Research</td>
+                <td>Now Form</td>
+                <td>Gurugram, India</td>
+                <td>2022&ndash;2024</td>
+              </tr>
+              <tr data-cat="research">
+                <td>Program Coordinator</td>
+                <td>Transitions Research</td>
+                <td>India</td>
+                <td>2022</td>
+              </tr>
+              <tr data-cat="research featured">
+                <td>Research Assistant</td>
+                <td>The Wharton School</td>
+                <td>New Delhi, India</td>
+                <td>2021&ndash;2022</td>
+              </tr>
+              <tr data-cat="research">
+                <td>Research &amp; Communications Associate</td>
+                <td>Digital Futures Lab</td>
+                <td>Goa, India</td>
+                <td>2021</td>
+              </tr>
+              <tr data-cat="research">
+                <td>Research Associate</td>
+                <td>Tandem Research India</td>
+                <td>North Goa, India</td>
+                <td>2020&ndash;2021</td>
+              </tr>
+              <tr data-cat="editorial featured">
+                <td>Founding Editor</td>
+                <td>Akademi Magazine</td>
+                <td>India</td>
+                <td>2020&ndash;2021</td>
+              </tr>
+              <tr data-cat="editorial">
+                <td>Editorial Intern</td>
+                <td>The Caravan</td>
+                <td>New Delhi, India</td>
+                <td>2020</td>
+              </tr>
+              <tr data-cat="research">
+                <td>Policy Research Intern</td>
+                <td>Telecom Regulatory Authority of India (TRAI)</td>
+                <td>New Delhi, India</td>
+                <td>2019</td>
+              </tr>
+              <tr data-cat="teaching">
+                <td>Teaching Assistant</td>
+                <td>Barnard College</td>
+                <td>New York, USA</td>
+                <td>2018&ndash;2019</td>
+              </tr>
+              <tr data-cat="editorial">
+                <td>Outreach Intern</td>
+                <td>National Museum, New Delhi</td>
+                <td>New Delhi, India</td>
+                <td>2016&ndash;2017</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="panel panel--education" aria-label="Education">
+          <div class="panel__bar">
+            <h2 class="panel__title">Education</h2>
+            <div class="panel__filters">
+              <button type="button" class="filter-chip is-active" data-filter="featured">Featured</button>
+              <button type="button" class="filter-chip" data-filter="degree">Degrees</button>
+              <button type="button" class="filter-chip" data-filter="course">Courses</button>
+            </div>
+          </div>
+          <div class="panel__body">
+            <table class="proj-table">
+              <thead>
+                <tr>
+                  <th>Institution</th>
+                  <th>Qualification</th>
+                  <th>Years</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-cat="degree featured">
+                  <td>Columbia University</td>
+                  <td>Master of Arts, Philosophy</td>
+                  <td>2018&ndash;2020</td>
+                </tr>
+                <tr data-cat="degree featured">
+                  <td>Delhi University</td>
+                  <td>Bachelor of Arts, Philosophy</td>
+                  <td>2014&ndash;2017</td>
+                </tr>
+                <tr data-cat="course">
+                  <td>University of Twente</td>
+                  <td>Summer Course, Ethics &amp; Governance of Technology</td>
+                  <td>2018</td>
+                </tr>
+                <tr data-cat="course">
+                  <td>King&rsquo;s College London</td>
+                  <td>Summer Course, Gender, Media &amp; Culture</td>
+                  <td>2016</td>
+                </tr>
+                <tr data-cat="course">
+                  <td>South Asian University</td>
+                  <td>Fall Course, Marxism in South Asia</td>
+                  <td>2016</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </section>
   </main>
+
+  <script>
+    // Stacking panels: measure each sticky bar and set cumulative `top`
+    // offsets so the bars stack correctly at any height / screen size.
+    (function() {
+      var bars = Array.prototype.slice.call(document.querySelectorAll('.panel__bar'));
+      function stackLayout() {
+        var acc = 0;
+        bars.forEach(function(bar) {
+          bar.style.top = acc + 'px';
+          acc += bar.offsetHeight;
+        });
+      }
+      window.addEventListener('load', stackLayout);
+      window.addEventListener('resize', stackLayout);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(stackLayout);
+      stackLayout();
+
+      // Row filtering. Each chip filters its own table by data-cat token.
+      document.querySelectorAll('.panel__filters').forEach(function(group) {
+        var body = group.closest('.panel__bar').nextElementSibling;
+        var table = body.querySelector('.proj-table');
+        function apply(cat) {
+          table.querySelectorAll('tbody tr').forEach(function(tr) {
+            var cats = (tr.getAttribute('data-cat') || '').split(/\s+/);
+            tr.style.display = cats.indexOf(cat) !== -1 ? '' : 'none';
+          });
+        }
+        group.addEventListener('click', function(e) {
+          var btn = e.target.closest('.filter-chip');
+          if (!btn) return;
+          group.querySelectorAll('.filter-chip').forEach(function(c) {
+            c.classList.toggle('is-active', c === btn);
+          });
+          apply(btn.getAttribute('data-filter'));
+          stackLayout();
+        });
+        // Apply the initially-selected filter (Featured) on load.
+        var active = group.querySelector('.filter-chip.is-active');
+        if (active) apply(active.getAttribute('data-filter'));
+      });
+
+      stackLayout();
+    })();
+  </script>
 
   <script>
 
@@ -584,7 +1070,8 @@ function updateCollisionBuffer() {
 }
 
 const themes = {
-  'Classic Confetti': ['#ff0000', '#4169e1', '#ffff00', '#228b22', '#ffc0cb', '#87ceeb', '#ffffff'],
+  // Softened, desaturated palette tuned to match the section slide colours.
+  'Classic Confetti': ['#be463e', '#3f5dcb', '#e8c24c', '#3d7a43', '#e6a0b0', '#8fb4d6', '#f0ede4'],
   'Neon Night': ['#ff00ff', '#00ffff', '#ffff00', '#ff0000', '#00ff00', '#ffffff'],
   'Soft Pastel': ['#ffb3ba', '#ffdfba', '#ffffba', '#baffc9', '#bae1ff', '#ffffff'],
   'Monochrome': ['#ffffff', '#cccccc', '#999999', '#666666', '#333333']
