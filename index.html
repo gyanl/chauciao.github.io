@@ -1,389 +1,755 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-
-    <title>Diwali @ Casa Chauciao</title>
-
-
-    <meta property="og:title" content="Pre-Diwali Teen Patti | 18 October 2024" />
-    <meta name="image" property="og:image" content="thumbnail.png" />
-    <meta property="og:description" content='Samosas & Pakoras | Get Booze & Flowers' />
-    <meta property="og:url" content="www.chauciao.com" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="627" />
-    <!-- TYPE BELOW IS PROBABLY: 'website' or 'article' or look on https://ogp.me/#types -->
-    <meta property="og:type" content='website' />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://geistfont.vercel.app/geist.css">
-    <meta name="apple-mobile-web-app-status-bar-style" content="FD6731">
-    <meta name="theme-color" content="#FD6731">
-
-    <style>
-        /* Customizable variables */
-        :root {
-            /* Colors */
-            --yellow: #FFF500;
-            --pink: #FD5DCE;
-            --orange: #FD6731;
-            --green: #26D27C;
-            --background-color-1: var(--pink);
-            --background-color-2: var(--orange);
-            --circle-color: #620E0E;
-
-            /* Sizes */
-            --circle-size: 40px;
-            --circle-border-width: 1.5px;
-            --arm-length: 320px;
-            --number-of-circles: 4;
-
-            /* Animation timings */
-            --main-rotation-duration: 40s;
-            --spawn-delay-between-arms: .1s;
-            --spawn-delay-between-circles: .1s;
-            --circle-appear-duration: 3s;
-
-            /* Animation properties */
-            --scale-min: 1.2;
-            --scale-max: 1.4;
-            --initial-scale: 0.1;
-            --final-scale: 1;
-            --initial-opacity: 0;
-            --final-opacity: 1;
-
-            /* Calculated values */
-            --circle-overlap: -120px;
-            --arm-offset: calc(var(--arm-length) / -2);
-
-            --question-font-size: 18px;
-            --answer-font-size: 16px;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: url('splatter.jpg');
-            background-repeat: repeat-y;
-            background-size: 100%;
-            font-family: "Geist";
-            font-weight: 140;
-            font-size: 24px;
-            color: var(--yellow);
-            overflow-x: hidden;
-            padding: 5% 20%;
-            align-content: space-evenly;
-        }
-
-        .main-content {
-            display: grid;
-            place-items: center;
-        }
-
-        .pattern {
-            position: relative;
-            width: 0;
-            height: 200px;
-            animation: fireworkRotate var(--main-rotation-duration) ease-in-out infinite;
-        }
-
-        .line {
-            position: absolute;
-            height: var(--circle-size);
-            width: var(--arm-length);
-            display: flex;
-            transform-origin: center;
-            left: var(--arm-offset);
-            gap: var(--circle-overlap);
-        }
-
-        .circle {
-            width: var(--circle-size);
-            height: var(--circle-size);
-            background: var(--circle-color);
-            border-radius: 50%;
-            margin: -8px;
-            opacity: var(--initial-opacity);
-            animation: appearAndExpand var(--circle-appear-duration) ease-out infinite;
-        }
-
-        /* Generate 8 arms with even spacing */
-        .line {
-            --angle: calc(360deg / 8);
-        }
-
-        .line:nth-child(1) {
-            transform: rotate(calc(var(--angle) * 0));
-        }
-
-        .line:nth-child(2) {
-            transform: rotate(calc(var(--angle) * 1));
-        }
-
-        .line:nth-child(3) {
-            transform: rotate(calc(var(--angle) * 2));
-        }
-
-        .line:nth-child(4) {
-            transform: rotate(calc(var(--angle) * 3));
-        }
-
-        .line:nth-child(5) {
-            transform: rotate(calc(var(--angle) * 4));
-        }
-
-        .line:nth-child(6) {
-            transform: rotate(calc(var(--angle) * 5));
-        }
-
-        .line:nth-child(7) {
-            transform: rotate(calc(var(--angle) * 6));
-        }
-
-        .line:nth-child(8) {
-            transform: rotate(calc(var(--angle) * 7));
-        }
-
-        /* Staggered animation delays */
-        .line:nth-child(1) .circle {
-            --delay: calc(0 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(2) .circle {
-            --delay: calc(1 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(3) .circle {
-            --delay: calc(2 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(4) .circle {
-            --delay: calc(3 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(5) .circle {
-            --delay: calc(4 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(6) .circle {
-            --delay: calc(5 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(7) .circle {
-            --delay: calc(6 * var(--spawn-delay-between-arms));
-        }
-
-        .line:nth-child(8) .circle {
-            --delay: calc(7 * var(--spawn-delay-between-arms));
-        }
-
-        .circle {
-            animation-delay: calc(var(--delay) + (var(--i) * var(--spawn-delay-between-circles)));
-        }
-
-        @keyframes appearAndExpand {
-            0% {
-                opacity: var(--initial-opacity);
-                transform: scale(var(--initial-scale));
-                border: var(--circle-border-width) solid var(--yellow);
-
-            }
-
-            50% {
-                opacity: var(--final-opacity);
-                transform: scale(var(--final-scale));
-                border: var(--circle-border-width) solid var(--green);
-
-            }
-
-            100% {
-                opacity: var(--initial-opacity);
-                transform: scale(var(--initial-scale));
-                border: var(--circle-border-width) solid var(--yellow);
-
-            }
-        }
-
-        @keyframes fireworkRotate {
-            0% {
-                transform: rotate(0deg) scale(var(--scale-min));
-            }
-
-            25% {
-                transform: rotate(90deg) scale(var(--scale-max));
-            }
-
-            50% {
-                transform: rotate(180deg) scale(var(--scale-min));
-            }
-
-            75% {
-                transform: rotate(270deg) scale(var(--scale-max));
-            }
-
-            100% {
-                transform: rotate(360deg) scale(var(--scale-min));
-            }
-        }
-
-        .top-content {
-            display: flex;
-            justify-content: space-between;
-            flex-direction: column;
-            line-height: .6;
-            margin-top: 0;
-            margin-bottom: 0;
-            z-index: 10;
-        }
-
-        .top-content p {
-            margin-block-start: 10px !important;
-            margin-block-end: 10px !important;
-        }
-
-        .right {
-            text-align: right;
-            padding-left: 8px;
-        }
-
-        .left {
-            text-align: left;
-            padding-right: 8px;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .bottom-content {
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            font-size: 40px;
-            line-height: 1.4;
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-
-        .bottom-content p {
-            border-top: 2px solid var(--yellow);
-            margin-block-start: 0 !important;
-            margin-block-end: 0 !important;
-        }
-
-        .section {
-            border-bottom: 2px solid var(--yellow);
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-        }
-
-        a {
-            color: var(--yellow);
-        }
-
-        .button {
-            background-color: var(--yellow);
-            color: #000;
-            border-radius: 6px;
-            padding: 11px 12px 10px 12px;
-            font-size: 14px;
-            width: fit-content;
-            margin-bottom: 10px;
-            display: inline-block;
-            font-weight: 105;
-        }
-
-        .question {
-            font-weight: 130;
-            margin-bottom: 8px;
-            font-size: var(--question-font-size);
-            padding-top: 12px;
-            color: #000;
-        }
-
-        .answer {
-            font-size: var(--answer-font-size);
-            font-weight: 100;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--yellow);
-        }
-
-        .answer:last-child {
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .faq-container {
-            margin: 20px;
-
-        }
-
-        .faq-container .answer a {
-            color: #000;
-            background-color: var(--yellow);
-            border-radius: 3px;
-            border: 2px solid var(--yellow);
-            text-decoration: none;
-            font-size: var(--answer-font-size);
-            padding: 0 3px;
-        }
-
-        .faq-container .answer a:after {
-            content: ' ↗';
-        }
-
-        img {
-            border-radius: 3px;
-            margin-top: 12px;
-            margin-bottom: 12px;
-            width: 100%;
-        }
-
-
-        /* for mobile */
-        @media (max-width: 500px) {
-            body {
-                background: var(--orange);
-                padding: 0;
-            }
-
-            .top-content {
-                line-height: 1.1;
-                padding: 0px;
-            }
-
-            .top-content p {
-                margin-block-start: 6px !important;
-                margin-block-end: 6px !important;
-            }
-
-            .bottom-content {
-                font-size: 30px;
-            }
-
-            .main-content {
-                background: url('splatter-mobile.jpg');
-                background-repeat: no-repeat;
-                background-size: cover;
-                background-position: center;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dots</title>
+  
+  <style>
+
+
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .tool-canvas-area {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas { display: block; background: transparent; }
+
+  </style>
 </head>
-
 <body>
+  <div class="tool-canvas-area">
+    <canvas id="canvas"></canvas>
+  </div>
 
-    <div class="bottom-content">
-        <div class="center">
-            <p>CHARU PRAGYA</p>
-            <p>DESIGNER • RESEARCHER</p>
-            <p></p>
-        </div>
-    </div>
+  <script>
 
+    // Mobile perf: cap devicePixelRatio so canvases allocate fewer pixels.
+    (function() {
+      var _isMobile = window.innerWidth <= 768;
+      if (_isMobile) {
+        var _nativeDPR = window.devicePixelRatio || 1;
+        var _cappedDPR = Math.min(1.5, _nativeDPR);
+        Object.defineProperty(window, 'devicePixelRatio', { get: function() { return _cappedDPR; } });
+      }
+    })();
+
+    window.CanvasRuntimeAPI = (function() {
+      var _exportMode = 'auto';
+      var _exportWidth = 0;
+      var _exportHeight = 0;
+      var _bgState = { mode: 'none', color: '#ffffff', imageEl: null, imageDataURL: null, fit: 'cover' };
+
+
+
+      var _canvas = document.getElementById('canvas');
+      var _area = _canvas ? _canvas.parentElement : document.querySelector('.tool-canvas-area');
+      var _resizeRAF = null;
+
+      function _detectCanvas() {
+        var r = window.renderer || window.threeRenderer;
+        if (r && r.domElement) {
+          _canvas = r.domElement;
+          _area = _canvas.parentElement;
+          return;
+        }
+        var area = document.querySelector('.tool-canvas-area');
+        if (area) {
+          var canvases = area.querySelectorAll('canvas');
+          var visible = [];
+          for (var j = 0; j < canvases.length; j++) {
+            if (canvases[j].style.display !== 'none') visible.push(canvases[j]);
+          }
+          if (visible.length >= 1) {
+            var largest = visible[0];
+            for (var i = 1; i < visible.length; i++) {
+              if (visible[i].width * visible[i].height > largest.width * largest.height) {
+                largest = visible[i];
+              }
+            }
+            _canvas = largest;
+            _area = _canvas.parentElement;
+          }
+        }
+      }
+
+
+
+
+      function _applyBgCSS() {
+        _detectCanvas();
+        if (!_canvas) return;
+        if (_bgState.mode === 'none') {
+          _canvas.style.background = '';
+        } else if (_bgState.mode === 'solid') {
+          _canvas.style.background = _bgState.color;
+        } else if (_bgState.mode === 'image') {
+          if (_bgState.imageDataURL) {
+            var fitCss = _bgState.fit === 'fill' ? '100% 100%' : _bgState.fit;
+            _canvas.style.backgroundColor = _bgState.color;
+            _canvas.style.backgroundImage = 'url("' + _bgState.imageDataURL + '")';
+            _canvas.style.backgroundSize = fitCss;
+            _canvas.style.backgroundPosition = 'center';
+            _canvas.style.backgroundRepeat = 'no-repeat';
+          } else {
+            _canvas.style.backgroundImage = '';
+            _canvas.style.backgroundColor = _bgState.color;
+          }
+        }
+      }
+
+      function setBackground(state) {
+        state = state || {};
+        _bgState.mode = state.mode || 'none';
+        _bgState.color = state.color || '#ffffff';
+        _bgState.fit = state.fit || 'cover';
+        if (state.image && state.image !== _bgState.imageDataURL) {
+          _bgState.imageDataURL = state.image;
+          _bgState.imageEl = null;
+          _applyBgCSS();
+          var img = new Image();
+          img.onload = function() {
+            if (_bgState.imageDataURL !== state.image) return;
+            _bgState.imageEl = img;
+          };
+          img.src = state.image;
+        } else if (!state.image) {
+          _bgState.imageEl = null;
+          _bgState.imageDataURL = null;
+        }
+        _applyBgCSS();
+      }
+
+      function getBackground() {
+        return { mode: _bgState.mode, color: _bgState.color, fit: _bgState.fit };
+      }
+
+      function setCanvas(el) {
+        _canvas = el;
+        _area = el ? el.parentElement : document.querySelector('.tool-canvas-area');
+        if (_bgState.mode !== 'none') _applyBgCSS();
+      }
+
+      function setExportDimensions(w, h) {
+        _detectCanvas();
+        _exportMode = 'fixed';
+        _exportWidth = Math.max(1, Math.round(w || 1));
+        _exportHeight = Math.max(1, Math.round(h || 1));
+        if (_canvas) {
+          _canvas.width = _exportWidth;
+          _canvas.height = _exportHeight;
+        }
+        if (window.p5 && typeof window.resizeCanvas === 'function') window.resizeCanvas(_exportWidth, _exportHeight);
+        if (window.renderer && window.renderer.setSize) window.renderer.setSize(_exportWidth, _exportHeight, false);
+        if (window.hydra && window.hydra.setResolution) window.hydra.setResolution(_exportWidth, _exportHeight);
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      function fitToArea() {}
+
+      function getExportDimensions() {
+        if (_exportMode === 'fixed') return { width: _exportWidth, height: _exportHeight, mode: 'fixed' };
+        _detectCanvas();
+        return { width: _canvas ? _canvas.width : 0, height: _canvas ? _canvas.height : 0, mode: 'auto' };
+      }
+
+      function isFixedExportMode() { return _exportMode === 'fixed'; }
+
+      function _onAreaResize() {
+        var r = window.renderer || window.threeRenderer;
+        if (!r || !r.setSize) return;
+        if (_resizeRAF) cancelAnimationFrame(_resizeRAF);
+        _resizeRAF = requestAnimationFrame(function() {
+          _detectCanvas();
+          if (!_area) return;
+          var w = _area.clientWidth;
+          var h = _area.clientHeight;
+          if (w <= 0 || h <= 0) return;
+          r.setSize(w, h);
+          window.dispatchEvent(new Event('resize'));
+        });
+      }
+      if (typeof ResizeObserver !== 'undefined' && _area) {
+        new ResizeObserver(_onAreaResize).observe(_area);
+      }
+      window.addEventListener('resize', _onAreaResize);
+
+      setTimeout(function() {
+        _detectCanvas();
+        if (_bgState.mode !== 'none') _applyBgCSS();
+      }, 500);
+
+      function getMousePos(event) {
+        _detectCanvas();
+        if (!_canvas) return { x: 0, y: 0 };
+        var rect = _canvas.getBoundingClientRect();
+        var scaleX = _canvas.width / rect.width;
+        var scaleY = _canvas.height / rect.height;
+        var touch = event.touches && event.touches[0]
+          ? event.touches[0]
+          : event.changedTouches && event.changedTouches[0]
+          ? event.changedTouches[0]
+          : null;
+        var clientX = touch ? touch.clientX : event.clientX;
+        var clientY = touch ? touch.clientY : event.clientY;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      }
+
+      function drawImage(ctx, img, x, y, w, h, fit) {
+        if (!img || !img.width || !img.height) return;
+        fit = fit || 'cover';
+        var ar = img.width / img.height;
+        var car = w / h;
+        var sx = 0, sy = 0, sw = img.width, sh = img.height;
+        var dx = x, dy = y, dw = w, dh = h;
+
+        if (fit === 'cover') {
+          if (ar > car) { sw = img.height * car; sx = (img.width - sw) / 2; }
+          else { sh = img.width / car; sy = (img.height - sh) / 2; }
+        } else if (fit === 'contain') {
+          if (ar > car) { dh = w / ar; dy = y + (h - dh) / 2; }
+          else { dw = h * ar; dx = x + (w - dw) / 2; }
+        }
+
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+      }
+
+      return {
+        setCanvas: setCanvas,
+        setBackground: setBackground,
+        getBackground: getBackground,
+        setExportDimensions: setExportDimensions,
+        fitToArea: fitToArea,
+        getExportDimensions: getExportDimensions,
+        isFixedExportMode: isFixedExportMode,
+
+
+        getMousePos: getMousePos,
+        drawImage: drawImage
+      };
+    })();
+
+    window.ChatoolyCanvas = window.CanvasRuntimeAPI;
+    window.ChatoolyControls = window.ControlsAPI;
+
+    (function() {
+      var srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+      if (srcDesc && srcDesc.set) {
+        Object.defineProperty(HTMLImageElement.prototype, 'src', {
+          get: srcDesc.get,
+          set: function(val) {
+            if (val && typeof val === 'string' && !val.startsWith('data:') && !this.crossOrigin) {
+              this.crossOrigin = 'anonymous';
+            }
+            srcDesc.set.call(this, val);
+          },
+          configurable: true,
+          enumerable: true
+        });
+      }
+    })();
+
+    window.loadImage = function(src, callback) {
+      var img = new Image();
+      if (src && typeof src === 'string' && !src.startsWith('data:')) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = function() { if (callback) callback(img); };
+      img.onerror = function() { console.error('Failed to load image:', src); };
+      img.src = src;
+      return img;
+    };
+  
+  </script>
+  <script>
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var __ctArea = canvas.parentElement;
+    var __maxDim = (window.innerWidth <= 768) ? 960 : 4096;
+
+    function resizeCanvas() {
+      var cs = getComputedStyle(__ctArea);
+      canvas.width = Math.min(__maxDim, __ctArea.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+      canvas.height = Math.min(__maxDim, __ctArea.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    var controls = (function() {
+      var _v = {"line1":"Charu","line2":"Pragya","font":{"family":"Inter","style":"normal","weight":400,"url":null},"textSize":195,"lineSpacing":1.1,"showText":true,"collisionMode":"Fill Inside (Positive Space)","density":68,"gravity":0.15,"bounciness":0.35,"friction":0.99,"accumulation":true,"settleLife":120,"mouseMode":"Repel","mouseRadius":50,"mouseStrength":1.1,"dotSize":6,"trailLength":0,"bgColor":"#000000","theme":"Classic Confetti","colors":["#9a60ff","#ff9060","#ff6063","#6da452"],"__sys_bg":{"mode":"solid","color":"#ffffff","image":null,"fit":"fill"}};
+      var _defaults = JSON.parse(JSON.stringify(_v));
+      function _hexToRgb(hex) {
+        var h = String(hex || '').replace('#', '');
+        if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+        if (h.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(h)) return null;
+        return {
+          r: parseInt(h.slice(0, 2), 16),
+          g: parseInt(h.slice(2, 4), 16),
+          b: parseInt(h.slice(4, 6), 16)
+        };
+      }
+      function _clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+      function _hexToRgbaCss(hex, opacity0to100) {
+        var rgb = _hexToRgb(hex);
+        if (!rgb) return 'rgba(0,0,0,1)';
+        var op = opacity0to100 != null && !isNaN(Number(opacity0to100)) ? Number(opacity0to100) : 100;
+        var a = _clamp(op, 0, 100) / 100;
+        return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + a + ')';
+      }
+      var api = {
+        get: function(k) { return _v[k]; },
+        getAll: function() { return Object.assign({}, _v); },
+        getDefaults: function() { return JSON.parse(JSON.stringify(_defaults)); },
+        getColorWithAlpha: function(baseKey) { return _hexToRgbaCss(_v[baseKey], _v[baseKey + '_opacity']); },
+        set: function(k, v) { _v[k] = v; },
+        onChange: function() {},
+        onAny: function() {},
+        onAction: function() {}
+      };
+      window.ControlsAPI = api;
+      window.ChatoolyControls = api;
+      return api;
+    })();
+
+    
+
+    // Creative Code
+    {
+      const area = document.querySelector('.tool-canvas-area');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Offscreen canvas for collision detection
+const collisionCanvas = document.createElement('canvas');
+const collisionCtx = collisionCanvas.getContext('2d');
+
+let width = window.innerWidth, height = window.innerHeight, dpr = window.devicePixelRatio || 1;
+let particles = [];
+let collisionData = null;
+let settledGrid = null; 
+
+const mouse = { x: -1000, y: -1000, active: false };
+
+const MAX_PARTICLES = 30000;
+function initParticles() {
+  particles = [];
+  for (let i = 0; i < MAX_PARTICLES; i++) {
+    particles.push(new Particle());
+  }
+  // Start with all particles inactive so they spawn gradually
+  particles.forEach(p => p.active = false);
+}
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  width = area.clientWidth;
+  height = area.clientHeight;
+  
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  collisionCanvas.width = width;
+  collisionCanvas.height = height;
+  
+  settledGrid = new Uint8Array(width * height);
+  if (particles.length === 0) initParticles();
+  updateCollisionBuffer();
+}
+
+area.addEventListener('pointermove', (e) => {
+  const rect = area.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+  mouse.active = true;
+});
+
+area.addEventListener('pointerdown', (e) => {
+  const rect = area.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  
+  const radius = controls.get('mouseRadius') * 2;
+  const strength = controls.get('mouseStrength') * 40;
+
+  particles.forEach(p => {
+    if (p.active) {
+      const dx = p.x - mx;
+      const dy = p.y - my;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < radius * radius) {
+        const dist = Math.sqrt(distSq);
+        const force = (1 - dist / radius) * strength;
+        const angle = Math.atan2(dy, dx);
+        p.vx += Math.cos(angle) * force;
+        p.vy += Math.sin(angle) * force;
+        p.settled = false; 
+        p.settleTime = 0;
+        p.unsettleTimer = 60; 
+      }
+    }
+  });
+});
+
+area.addEventListener('pointerleave', () => {
+  mouse.active = false;
+});
+
+function updateCollisionBuffer() {
+  collisionCtx.clearRect(0, 0, width, height);
+  
+  const line1 = controls.get('line1') || '';
+  const line2 = controls.get('line2') || '';
+  const lines = [line1, line2].filter(l => l.trim() !== '');
+  const font = controls.get('font') || { style: 'normal', weight: '900', family: 'Inter' };
+  const fontSize = controls.get('textSize') || 150;
+  
+  collisionCtx.font = `${font.style || 'normal'} ${font.weight || '900'} ${fontSize}px ${font.family || 'Inter'}`;
+  collisionCtx.fillStyle = 'white';
+  collisionCtx.textAlign = 'center';
+  collisionCtx.textBaseline = 'middle';
+
+  const lineHeight = fontSize * controls.get('lineSpacing');
+  const centerY = height / 2;
+
+  if (lines.length > 0) {
+    const totalHeight = (lines.length - 1) * lineHeight;
+    const startY = centerY - totalHeight / 2;
+    lines.forEach((line, i) => {
+      collisionCtx.fillText(line, width / 2, startY + i * lineHeight);
+    });
+  }
+  
+  const imgData = collisionCtx.getImageData(0, 0, width, height);
+  collisionData = new Uint32Array(imgData.data.buffer);
+  if (settledGrid) settledGrid.fill(0);
+  
+  // Reset all particles to re-target new text immediately
+  particles.forEach(p => p.reset());
+}
+
+const themes = {
+  'Classic Confetti': ['#ff0000', '#4169e1', '#ffff00', '#228b22', '#ffc0cb', '#87ceeb', '#ffffff'],
+  'Neon Night': ['#ff00ff', '#00ffff', '#ffff00', '#ff0000', '#00ff00', '#ffffff'],
+  'Soft Pastel': ['#ffb3ba', '#ffdfba', '#ffffba', '#baffc9', '#bae1ff', '#ffffff'],
+  'Monochrome': ['#ffffff', '#cccccc', '#999999', '#666666', '#333333']
+};
+
+function getPalette() {
+  const theme = controls.get('theme');
+  if (theme === 'Custom Palette') return controls.get('colors');
+  return themes[theme] || themes['Classic Confetti'];
+}
+
+class Particle {
+  constructor() {
+    this.reset();
+    this.active = false;
+  }
+
+  reset() {
+    const mode = controls.get('collisionMode');
+    if (mode === 'Fill Inside (Positive Space)' && collisionData) {
+      let attempts = 0;
+      let foundX = Math.random() * width;
+      while (attempts < 100) {
+        let x = Math.floor(Math.random() * width);
+        let hasText = false;
+        for (let y = 0; y < height; y += 10) {
+          if (collisionData[y * width + x] !== 0) {
+            hasText = true;
+            break;
+          }
+        }
+        if (hasText) {
+          foundX = x;
+          break;
+        }
+        attempts++;
+      }
+      this.x = foundX;
+    } else {
+      this.x = Math.random() * width;
+    }
+    
+    this.y = -20 - Math.random() * 500;
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = Math.random() * 3 + 2;
+    const palette = getPalette();
+    this.color = palette[Math.floor(Math.random() * palette.length)];
+    this.radius = controls.get('dotSize') * (0.8 + Math.random() * 0.4);
+    this.active = true;
+    this.settled = false;
+    this.settleTime = 0;
+    this.unsettleTimer = 0;
+  }
+
+  update() {
+    if (!this.active) return;
+    
+    if (this.unsettleTimer > 0) this.unsettleTimer--;
+
+    const mouseMode = controls.get('mouseMode');
+    const mouseRadius = controls.get('mouseRadius');
+    const mouseStrength = controls.get('mouseStrength');
+
+    if (mouse.active && mouseMode !== 'None') {
+      const dx = this.x - mouse.x;
+      const dy = this.y - mouse.y;
+      const distSq = dx * dx + dy * dy;
+      const radiusSq = mouseRadius * mouseRadius;
+
+      if (distSq < radiusSq) {
+        const dist = Math.sqrt(distSq);
+        const force = (1 - dist / mouseRadius) * mouseStrength * 15; 
+        const angle = Math.atan2(dy, dx);
+        
+        if (mouseMode === 'Repel') {
+          this.vx += Math.cos(angle) * force;
+          this.vy += Math.sin(angle) * force;
+        } else if (mouseMode === 'Attract') {
+          this.vx -= Math.cos(angle) * force;
+          this.vy -= Math.sin(angle) * force;
+        }
+        
+        if (force > 0.2) {
+          this.settled = false;
+          this.settleTime = 0;
+          this.unsettleTimer = 30;
+          this.vx += (Math.random() - 0.5) * 2;
+          this.vy += (Math.random() - 0.5) * 2;
+        }
+      }
+    }
+
+    if (this.settled) {
+      this.settleTime += 1/60;
+      const maxLife = controls.get('settleLife') || 120;
+      if (this.settleTime > maxLife) {
+        this.active = false; // Mark for re-spawning
+      }
+      return;
+    }
+
+    const gravity = controls.get('gravity');
+    const bounce = controls.get('bounciness');
+    const mode = controls.get('collisionMode');
+    const accumulation = controls.get('accumulation');
+    
+    this.vy += gravity;
+    
+    const friction = controls.get('friction');
+    this.vx *= friction;
+    this.vy *= friction;
+    
+    let nextX = this.x + this.vx;
+    let nextY = this.y + this.vy;
+
+    const ix = Math.floor(nextX);
+    const iy = Math.floor(nextY);
+
+    if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+      if (!collisionData) return;
+      const pixel = collisionData[iy * width + ix];
+      
+      const curX = Math.floor(this.x);
+      const curY = Math.floor(this.y);
+      const currentPixel = (curX >= 0 && curX < width && curY >= 0 && curY < height) 
+        ? collisionData[curY * width + curX] 
+        : 0;
+      
+      const isSettledBelow = iy < height - 1 && (
+        settledGrid[(iy + 1) * width + ix] || 
+        settledGrid[(iy + 1) * width + Math.max(0, ix - 5)] || 
+        settledGrid[(iy + 1) * width + Math.min(width - 1, ix + 5)] ||
+        (iy < height - 5 && settledGrid[(iy + 4) * width + ix])
+      );
+      
+      let shouldBounce = false;
+      let shouldSettle = false;
+
+      if (mode === 'Bounce Off (Negative Space)') {
+        if (pixel !== 0 || isSettledBelow || iy >= height - 1) {
+          shouldBounce = true;
+          if (accumulation && (isSettledBelow || iy >= height - 1 || (pixel !== 0 && this.vy > 0))) {
+            shouldSettle = Math.random() < 0.98;
+          }
+        }
+      } else {
+        if (pixel !== 0) {
+          const pixelBelow = (iy < height - 1) ? collisionData[(iy + 1) * width + ix] : 0;
+          if (isSettledBelow || (iy < height - 1 && pixelBelow === 0) || iy >= height - 1) {
+            shouldSettle = accumulation; 
+          }
+        } else {
+          if (currentPixel !== 0) {
+            shouldBounce = true;
+          }
+        }
+      }
+
+      if (shouldSettle && this.unsettleTimer <= 0) {
+        this.settled = true;
+        this.vx = 0;
+        this.vy = 0;
+        return;
+      }
+
+      if (shouldBounce) {
+        if (mode === 'Fill Inside (Positive Space)') {
+          this.vx *= -bounce;
+          this.vy *= -bounce;
+          nextX = this.x;
+          nextY = this.y;
+        } else {
+          this.vx *= -bounce;
+          this.vy *= -bounce;
+          this.vx += (Math.random() - 0.5) * 1.0;
+          this.vy += (Math.random() - 0.5) * 1.0;
+          nextX = this.x + this.vx;
+          nextY = this.y + this.vy;
+        }
+      }
+    }
+
+    this.x = nextX;
+    this.y = nextY;
+
+    if (this.y > height + 50 || this.x < -50 || this.x > width + 50) {
+      this.active = false;
+    }
+  }
+
+  draw() {
+    if (!this.active) return;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function draw() {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const trail = controls.get('trailLength');
+  ctx.fillStyle = controls.get('bgColor');
+  if (trail > 0) {
+    ctx.globalAlpha = 1 - trail;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+  } else {
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.restore();
+
+  if (controls.get('showText')) {
+    ctx.drawImage(collisionCanvas, 0, 0);
+  }
+
+  if (settledGrid) settledGrid.fill(0);
+  const dotSize = controls.get('dotSize');
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    if (p.active && p.settled) {
+      const ix = Math.floor(p.x);
+      const iy = Math.floor(p.y);
+      if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+        const range = Math.floor(dotSize * 0.6);
+        const startX = Math.max(0, ix - range);
+        const endX = Math.min(width - 1, ix + range);
+        for (let sx = startX; sx <= endX; sx++) {
+          settledGrid[iy * width + sx] = 1;
+        }
+      }
+    }
+  }
+
+  const density = controls.get('density');
+  let spawned = 0;
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    if (!p.active) {
+      p.reset(); 
+      spawned++;
+      if (spawned >= density) break;
+    }
+  }
+
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    p.update();
+    p.draw();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+const ro = new ResizeObserver(() => resize());
+ro.observe(area);
+
+controls.onChange('line1', updateCollisionBuffer);
+controls.onChange('line2', updateCollisionBuffer);
+controls.onChange('lineSpacing', updateCollisionBuffer);
+controls.onChange('font', updateCollisionBuffer);
+controls.onChange('textSize', updateCollisionBuffer);
+controls.onChange('collisionMode', updateCollisionBuffer);
+controls.onChange('theme', () => {
+  const palette = getPalette();
+  particles.forEach(p => {
+    p.color = palette[Math.floor(Math.random() * palette.length)];
+  });
+});
+controls.onChange('colors', () => {
+  if (controls.get('theme') === 'Custom Palette') {
+    const palette = controls.get('colors');
+    particles.forEach(p => {
+      p.color = palette[Math.floor(Math.random() * palette.length)];
+    });
+  }
+});
+
+controls.onAction('refillText', updateCollisionBuffer);
+controls.onAction('resetParticles', () => {
+  particles.forEach(p => p.active = false);
+});
+
+controls.onChange('accumulation', (val) => {
+  if (!val) {
+    particles.forEach(p => p.settled = false);
+    if (settledGrid) settledGrid.fill(0);
+  }
+});
+
+resize();
+requestAnimationFrame(draw);
+
+    }
+
+    // System Background Wiring
+    if (typeof CanvasRuntimeAPI !== 'undefined') {
+      var __sysBgVal = controls.get('__sys_bg');
+      if (__sysBgVal) CanvasRuntimeAPI.setBackground(__sysBgVal);
+    }
+  </script>
 </body>
-
 </html>
