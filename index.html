@@ -115,17 +115,28 @@
        normal document scroll, so long tables are never cropped.
        The bar `top` offsets are measured and set by JS (see stackLayout)
        so they stack correctly at any bar height / screen size. */
+    /* Row height scales with the viewport: ~86px on a 16" laptop, shrinking
+       on shorter screens, capped so it never grows oversized. The title bar
+       uses the same value so it matches an item row. */
+    :root { --row-h: clamp(64px, 8vh, 86px); }
     .panel { position: relative; color: #fff; }
-    .panel--projects   { background: #3d7a43; }
+    .panel--projects   { background: #296E5F; }
     .panel--experience { background: #3f5dcb; }
     .panel--education  { background: #be463e; min-height: 100vh; }
 
     .panel__bar {
       position: sticky;
       top: 0; /* overridden per panel by JS */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      min-height: var(--row-h);
+      padding: 0 24px;
+      /* Same colour as the card with a 20% black overlay on top. */
       background-color: inherit;
-      padding: 18px 48px;
-      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+      background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
     }
     .panel--projects   > .panel__bar { z-index: 30; }
     .panel--experience > .panel__bar { z-index: 20; }
@@ -141,7 +152,6 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 12px;
     }
     /* Plain all-caps text filters: dim by default, bright on hover, and a
        solid off-white highlight when selected (reads on any panel colour). */
@@ -163,13 +173,12 @@
       color: #1a1a1a;
       background: #f0ede4;
     }
-    .panel__body {
-      padding-top: 20px;
-      padding-bottom: 64px;
-      min-height: 40vh;
-    }
+    .panel__body { padding-bottom: 64px; }
     .panel__empty {
-      padding: 8px 48px;
+      display: flex;
+      align-items: center;
+      min-height: var(--row-h);
+      padding: 0 24px;
       font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 13px;
       letter-spacing: 0.03em;
@@ -178,34 +187,25 @@
 
     .proj-table {
       width: 100%;
+      table-layout: fixed; /* fixed grid so columns line up across all tables */
       border-collapse: collapse;
       font-family: "BDO Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    .proj-table th,
+    /* No column header row — only the title bar acts as the header. */
+    .proj-table thead { display: none; }
     .proj-table td {
       text-align: left;
-      padding: 22px 24px;
       vertical-align: middle;
+      height: var(--row-h);
+      padding: 0 24px;
+      overflow-wrap: break-word;
     }
-    .proj-table th:first-child,
-    .proj-table td:first-child { padding-left: 48px; }
-    .proj-table th:last-child,
-    .proj-table td:last-child { padding-right: 48px; }
-    /* Year column is always the last one: keep it narrow. */
-    .proj-table th:last-child,
-    .proj-table td:last-child { width: 150px; white-space: nowrap; }
-    /* Projects table has no year; let its last column (Discipline) breathe. */
-    .proj-table--wide th:last-child,
-    .proj-table--wide td:last-child { width: auto; white-space: normal; }
-    .proj-table thead th {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      padding-bottom: 28px;
-      color: rgba(255, 255, 255, 0.6);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.28);
-    }
+    /* Shared 4-column grid (name / detail / meta / year), identical on every
+       table so the columns align across Projects, Experience and Education. */
+    .proj-table td:nth-child(1) { width: 30%; }
+    .proj-table td:nth-child(2) { width: 34%; }
+    .proj-table td:nth-child(3) { width: 22%; }
+    .proj-table td:nth-child(4) { width: 14%; white-space: nowrap; }
     .proj-table tbody td {
       font-size: 17px;
       font-weight: 400;
@@ -221,27 +221,42 @@
     .proj-table tbody tr:hover td { background: rgba(255, 255, 255, 0.13); }
 
     @media (max-width: 768px) {
-      .panel__bar { padding: 14px 20px; }
+      .panel__bar { padding: 12px 20px; }
       .panel__title { font-size: 19px; }
-      .panel__empty { padding: 8px 20px; }
-      /* Stack each row into a block on narrow screens. */
-      .proj-table thead { display: none; }
+      .panel__empty { padding: 12px 20px; }
+
+      /* Mobile tiles: bold title, one detail line, then the remaining
+         columns joined into a single muted meta line — fewer lines, calmer. */
       .proj-table, .proj-table tbody, .proj-table tr, .proj-table td { display: block; width: 100%; }
+      .proj-table td:nth-child(1),
+      .proj-table td:nth-child(2),
+      .proj-table td:nth-child(3),
+      .proj-table td:nth-child(4) { width: auto; }
       .proj-table tbody tr {
-        padding: 16px 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        padding: 18px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
       }
-      .proj-table tbody td {
-        padding: 2px 0;
-        border: none;
+      .proj-table td { height: auto; padding: 0; border: none; white-space: normal; }
+      .proj-table tbody td:nth-child(1) {
+        font-size: 20px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 6px;
       }
-      .proj-table th:first-child,
-      .proj-table td:first-child { padding-left: 0; }
-      .proj-table th:last-child,
-      .proj-table td:last-child { width: auto; white-space: normal; padding-right: 0; }
-      .proj-table tbody td:first-child { font-size: 19px; margin-bottom: 4px; }
+      .proj-table tbody td:nth-child(2) {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 3px;
+      }
+      .proj-table tbody td:nth-child(3),
+      .proj-table tbody td:nth-child(4) {
+        display: inline;
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .proj-table tbody td:nth-child(3)::after { content: ", "; }
+      .proj-table tbody tr:hover,
       .proj-table tbody tr:hover td { background: transparent; }
-      .proj-table tbody tr:hover { background: rgba(255, 255, 255, 0.13); }
     }
 
     /* Accessible content for screen readers, search engines and Lighthouse,
@@ -301,12 +316,13 @@
         </div>
       </div>
       <div class="panel__body">
-        <table class="proj-table proj-table--wide">
+        <table class="proj-table">
           <thead>
             <tr>
               <th>Project</th>
               <th>Description</th>
               <th>Discipline</th>
+              <th>Year</th>
             </tr>
           </thead>
           <tbody>
@@ -314,101 +330,121 @@
               <td>Net Gala</td>
               <td>Sports community and venue booking platform</td>
               <td>Strategy, UI/UX</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="website">
               <td>Dancing with Mountains</td>
               <td>Digital space translating radical philosophies</td>
               <td>Website</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="uiux">
               <td>Listen</td>
               <td>Emotional-AI products for iOS and web</td>
               <td>UI/UX</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="website">
               <td>Advanced Hydrocarbon Fuels</td>
               <td>Communication design for plastic-to-fuel process</td>
               <td>Website</td>
+              <td>2023</td>
             </tr>
             <tr data-cat="branding website">
               <td>Amie</td>
               <td>Rotating wardrobe platform identity and web</td>
               <td>Branding, Website</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="branding website featured">
               <td>Autotelic Inc</td>
               <td>AI agent brand and identity design</td>
               <td>Branding, Website</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="uiux strategy branding">
               <td>Bobo Cakery</td>
               <td>Customized artisanal cakes e-commerce site</td>
               <td>UI/UX, Strategy, Branding</td>
+              <td>2023</td>
             </tr>
             <tr data-cat="uiux strategy">
               <td>EBC Reader</td>
               <td>E-library brand and experience redesign</td>
               <td>UI/UX, Strategy</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="website">
               <td>Fleetcraft</td>
               <td>Aviation accessibility vision website</td>
               <td>Website</td>
+              <td>2023</td>
             </tr>
             <tr data-cat="uiux website strategy featured">
               <td>Literary Map by Hammock Mag</td>
               <td>Interactive literary geography visualization</td>
               <td>UI/UX, Website, Strategy</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="branding website featured">
               <td>Memory Store</td>
               <td>AI context storage and recall system (YC P26)</td>
               <td>Branding, Website</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="branding uiux featured">
               <td>S&#257; Biennale</td>
               <td>Asia&rsquo;s land art festival branding</td>
               <td>Branding, UI/UX</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="uiux strategy branding">
               <td>Cakeshop</td>
               <td>Zomato dessert platform redesign</td>
               <td>UI/UX, Strategy, Branding</td>
+              <td>2023</td>
             </tr>
             <tr data-cat="website">
               <td>Borkowski</td>
               <td>London PR agency rebrand</td>
               <td>Website</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="branding uiux">
               <td>Gameramp</td>
               <td>Interactive software control layer</td>
               <td>Branding, UI/UX</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="branding featured">
               <td>ressl.ai</td>
               <td>Intelligent agents automation branding (YC W26)</td>
               <td>Branding</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="website">
               <td>Anant Foundation for the Arts</td>
               <td>South Asian art foundation website</td>
               <td>Website</td>
+              <td>2023</td>
             </tr>
             <tr data-cat="branding website video featured">
               <td>Presentations.ai</td>
               <td>AI-powered presentation generator</td>
               <td>Branding, Website, Video</td>
+              <td>2024</td>
             </tr>
             <tr data-cat="branding website featured">
               <td>Sycamore</td>
               <td>Autonomous AI agent orchestration platform</td>
               <td>Branding, Website</td>
+              <td>2025</td>
             </tr>
             <tr data-cat="website">
               <td>Neurosonic</td>
               <td>Stroke prevention medical device site</td>
               <td>Website</td>
+              <td>2023</td>
             </tr>
           </tbody>
         </table>
@@ -527,6 +563,7 @@
                 <tr>
                   <th>Institution</th>
                   <th>Qualification</th>
+                  <th>Type</th>
                   <th>Years</th>
                 </tr>
               </thead>
@@ -534,26 +571,31 @@
                 <tr data-cat="degree featured">
                   <td>Columbia University</td>
                   <td>Master of Arts, Philosophy</td>
+                  <td>Degree</td>
                   <td>2018&ndash;2020</td>
                 </tr>
                 <tr data-cat="degree featured">
                   <td>Delhi University</td>
                   <td>Bachelor of Arts, Philosophy</td>
+                  <td>Degree</td>
                   <td>2014&ndash;2017</td>
                 </tr>
                 <tr data-cat="course">
                   <td>University of Twente</td>
                   <td>Summer Course, Ethics &amp; Governance of Technology</td>
+                  <td>Course</td>
                   <td>2018</td>
                 </tr>
                 <tr data-cat="course">
                   <td>King&rsquo;s College London</td>
                   <td>Summer Course, Gender, Media &amp; Culture</td>
+                  <td>Course</td>
                   <td>2016</td>
                 </tr>
                 <tr data-cat="course">
                   <td>South Asian University</td>
                   <td>Fall Course, Marxism in South Asia</td>
+                  <td>Course</td>
                   <td>2016</td>
                 </tr>
               </tbody>
@@ -1071,7 +1113,7 @@ function updateCollisionBuffer() {
 
 const themes = {
   // Softened, desaturated palette tuned to match the section slide colours.
-  'Classic Confetti': ['#be463e', '#3f5dcb', '#e8c24c', '#3d7a43', '#e6a0b0', '#8fb4d6', '#f0ede4'],
+  'Classic Confetti': ['#be463e', '#3f5dcb', '#e8c24c', '#296E5F', '#e6a0b0', '#8fb4d6', '#f0ede4'],
   'Neon Night': ['#ff00ff', '#00ffff', '#ffff00', '#ff0000', '#00ff00', '#ffffff'],
   'Soft Pastel': ['#ffb3ba', '#ffdfba', '#ffffba', '#baffc9', '#bae1ff', '#ffffff'],
   'Monochrome': ['#ffffff', '#cccccc', '#999999', '#666666', '#333333']
